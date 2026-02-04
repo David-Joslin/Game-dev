@@ -22,6 +22,40 @@ def create_satellite():
     start_time = time.time()#used to get current time of ur computer
 
 def draw():
+    global total_time
+    screen.blit("bg",(0,0))
+    number = 1
+    for satellite in satellites:
+        screen.draw.text(str(number),(satellite.pos[0],satellite.pos[1]+20))
+        satellite.draw()
+        number += 1
+    
+    for line in lines:
+        screen.draw.line(line[0],line[1],(255,150,0))
+    
+    if next_satellite < num_of_satellites:
+        total_time = time.time() - start_time
+        screen.draw.text("Time:" + str(round(total_time,2)),(20,20),fontsize = 20,color = "white")
+    else:
+        screen.draw.text("Finished! Total time:" + str(round(total_time,2)),(20,20),fontsize = 20,color = "white")
+
+def update():
     pass
+
+def on_mouse_down(pos):
+    global next_satellite, lines 
+    if next_satellite < num_of_satellites:
+        if satellites[next_satellite].collidepoint(pos):
+            if next_satellite:
+                lines.append((satellites[next_satellite - 1].pos,satellites[next_satellite].pos))
+            next_satellite += 1
+        else:
+            print("Wrong satellite")
+            lines = []
+            next_satellite = 0
+            
+
+create_satellite()
+    
 
 pgzrun.go()
