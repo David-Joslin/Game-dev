@@ -1,78 +1,93 @@
 import pgzrun
 import random
-import time
 
-WIDTH = 800
+WIDTH = 750
 HEIGHT = 600
+TITLE = "Galoga game"
+BLUE = (0,0,255)
 
-TITLE = "Satellite game"
-satellites = []
-lines = []
-next_satellite = 0
-num_of_satellites = 10
-start_time = 0
-total_time = 0
-end_time = 0
+ship = Actor("galoga")
+bug = Actor("bug")
 
-def create_satellite():
-    global start_time
+ship.pos = WIDTH/2,HEIGHT - 60
+speed = 2
+direction = 1
 
-    star_positions = [
-        (400, 120),  
-        (460, 260),
-        (600, 260),
-        (490, 350),
-        (530, 500),
-        (400, 410),
-        (270, 500),
-        (310, 350),
-        (200, 260),
-        (340, 260)
-    ]
+bullets = []
+enemies = []
 
-    for count in range(0, num_of_satellites):
-        satellite = Actor("satellite")
-        satellite.pos = star_positions[count]
-        satellites.append(satellite)
+for x in range(10):
 
-    start_time = time.time()
+    enemies.append(bug)
+    enemies[-1].x = 100 + 70*x
+    enemies[-1].y = -30
 
-def draw():
-    global total_time
-    screen.blit("bg", (0, 0))
+Score = 0
+def display_score():
+    screen.draw.text(str(Score),(100,30))
 
-    number = 1
-    for satellite in satellites:
-        screen.draw.text(str(number), (satellite.pos[0], satellite.pos[1] + 20))
-        satellite.draw()
-        number += 1
 
-    for line in lines:
-        screen.draw.line(line[0], line[1], (255, 150, 0))
+def on_key_down(key):
+    if key == keys.SPACE:
+        bullets.append(Actor("bullet"))
+        bullets[-1].x = ship.x
+        bullets[-1].y = ship.y - 50
 
-    if next_satellite < num_of_satellites:
-        total_time = time.time() - start_time
-        screen.draw.text("Time: " + str(round(total_time, 2)),
-                         (20, 20), fontsize=20, color="white")
-    else:
-        screen.draw.text("Finished! Total time: " + str(round(total_time, 2)),
-                         (20, 20), fontsize=20, color="white")
 
 def update():
-    pass
+    global Score
+    global direction
+    moveDown = False
+    if keyboard.left:
+        ship.x -= 10
+        if ship.x <= 0:
+            ship.x = 0
+    elif keyboard.right:
+        ship.x += 10
+        if ship.x >= WIDTH:
+            ship.x = WIDTH
 
-def on_mouse_down(pos):
-    global next_satellite, lines
-    if next_satellite < num_of_satellites:
-        if satellites[next_satellite].collidepoint(pos):
-            if next_satellite:
-                lines.append((satellites[next_satellite - 1].pos,
-                              satellites[next_satellite].pos))
-            next_satellite += 1
+    for bullet in bullets:
+        if bullet.y <= 0:
+            bullets.remove(bullet)
         else:
-            print("Wrong satellite")
-            lines = []
-            next_satellite = 0
+            bullet.y -= 10
+    if (len(enemies)>0) and (enemies[0].x < 20 or enemies[-1].x > WIDTH-30):
+        moveDown = True 
+        direction = direction*(-1)
+    for enemy in enemies:
+        enemy.x += 5*direction
+        if moveDown == True:
+            enemy.y += 10
 
-create_satellite()
+        
+    #checking if the enemy hits a bullet
+
+        for bullet in bullets:
+            if enemy.colliderect(bullet):
+                Sounds.eep.play()
+                Score +=100
+                bullets.remove(bullet)
+                enemies.remove(enemy)
+
+def draw():
+    screen.clear()
+    screen.fill((0,200,0))
+    for bullet in bullets:
+        bullet.draw()
+
+    for enemy in enemies:
+        enemy.draw()
+
+    ship.draw()
+
+    display_score()
+
+
+
+
+
+
+    
+
 pgzrun.go()
